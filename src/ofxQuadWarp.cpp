@@ -4,7 +4,8 @@
 //
 
 #include "ofxQuadWarp.h"
-#include "opencv2/calib3d.hpp"
+//#include "opencv2/calib3d.hpp"
+#include "ofxHomography.h"
 
 ofxQuadWarp::ofxQuadWarp() {
     anchorSize = 10;
@@ -138,55 +139,8 @@ ofMatrix4x4 ofxQuadWarp::getMatrixInverse() const {
 }
 
 ofMatrix4x4 ofxQuadWarp::getMatrix(const ofPoint* srcPoints, const ofPoint* dstPoints) const {
-
-	//Store the source and destination points into cv::Mat matrices
-	cv::Mat src_mat = cv::Mat(4, 2, CV_32FC1);
-	cv::Mat dst_mat = cv::Mat(4, 2, CV_32FC1);
-	for (int i = 0; i < 4; i++) {
-		src_mat.at<float>(i, 0) = srcPoints[i].x;
-		src_mat.at<float>(i, 1) = srcPoints[i].y;
-		dst_mat.at<float>(i, 0) = dstPoints[i].x;
-		dst_mat.at<float>(i, 1) = dstPoints[i].y;
-	}
-
-	//figure out the warping!
-	//warning - older versions of openCV had a bug
-	//in this function.
-	cv::Mat translate = cv::findHomography(src_mat, dst_mat);
-	
-	//we need to copy these values
-	//from the 3x3 2D openCV matrix which is row ordered
-	//
-	// ie:   [0][1][2] x
-	//       [3][4][5] y
-	//       [6][7][8] w
-	
-	//to openGL's 4x4 3D column ordered matrix
-	//        x  y  z  w   
-	// ie:   [0][3][ ][6]
-	//       [1][4][ ][7]
-	//		 [ ][ ][ ][ ]
-	//       [2][5][ ][9]
-	//       
-	
-	ofMatrix4x4 matrixTemp;
-	matrixTemp.getPtr()[0]  = translate.at<double>(0);
-	matrixTemp.getPtr()[4]  = translate.at<double>(1);
-	matrixTemp.getPtr()[12] = translate.at<double>(2);
-	
-	matrixTemp.getPtr()[1]  = translate.at<double>(3);
-	matrixTemp.getPtr()[5]  = translate.at<double>(4);
-	matrixTemp.getPtr()[13] = translate.at<double>(5);
-	
-	matrixTemp.getPtr()[3]  = translate.at<double>(6);
-	matrixTemp.getPtr()[7]  = translate.at<double>(7);
-	matrixTemp.getPtr()[15] = translate.at<double>(8);
-	
-	translate.release();
-	src_mat.release();
-	dst_mat.release();
-	
-	return matrixTemp;
+//ofMatrix4x4 ofxQuadWarp::getMatrix(const std::vector<ofPoint>& srcPoints, const std::vector<ofPoint>& dstPoints) const {
+    return ofxHomography::findHomography(srcPoints, dstPoints);
 }
 
 void ofxQuadWarp::update() {
